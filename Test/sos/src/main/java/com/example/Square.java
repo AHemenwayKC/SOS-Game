@@ -19,20 +19,4 @@ public class Square extends StackPane {
       PrimaryController.makeMove(this);
    }
 
-   // public void drawS() {
-   //    Text s = new Text("S");
-   //    s.setFont(Font.font(24));
-   //    this.getChildren().add(s);
-   // }
-
-   // public void drawO() {
-   //    Text o = new Text("O");
-   //    o.setFont(Font.font(24));
-   //    this.getChildren().add(o);
-   // }
-
-   // public static void drawLine() {
-
-   // }
-
 }
