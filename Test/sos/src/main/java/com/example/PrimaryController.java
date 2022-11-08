@@ -34,16 +34,16 @@ public class PrimaryController implements Initializable {
 
    @FXML
    private ComboBox<String> gameMode;
+   
    private String[] gameModes = {"Simple", "General"};
 
    @FXML
    private ComboBox<String> gameSize;
+   
    private String[] gameSizes = {"3", "4", "5", "6", "7", "8", "9"};
 
    @FXML
-   public static RadioButton rS, rO, bS, bO;
-   public static Label redScore = new Label("0"), blueScore = new Label("0");
-   public static String redMove = new String("S"), blueMove = new String("S");
+   private RadioButton rS, rO, bS, bO;
 
    @FXML
    private Label turnLabel;
@@ -52,33 +52,16 @@ public class PrimaryController implements Initializable {
 
    /*____________________________________*/
    /* ----- START Red Player Logic ----- */
-   public static String getRedMove() {
-      if (rO.isSelected()) {
-         redMove = "O";
-      }
-      else if (rS.isSelected()) {
-         redMove = "S";
-      }
-      return redMove;
-   }
-
-   public static void setRedMove(String move) {
-      redMove = move;
-   }
    
-   public static void updateRedMove(ActionEvent event) {
+   public void updateRedMove(ActionEvent event) {
       if (rO.isSelected()) {
-         setRedMove("O");
+         Player.setRedMove("O");
       }
       else if (rS.isSelected()) {
-         setRedMove("S");
+         Player.setRedMove("S");
       }
    }
 
-   // UNFINISHED
-   public static void setRedScore(String score) {
-      redScore.setText(score);
-   }
    /* ----- END Red Player Logic ----- */
    /*__________________________________*/
 
@@ -87,27 +70,16 @@ public class PrimaryController implements Initializable {
 
    /*_____________________________________*/
    /* ----- START Blue Player Logic ----- */
-   public static String getBlueMove() {
-      return blueMove;
-   }
-
-   public static void setBlueMove(String move) {
-      blueMove = move;
-   }
 
    public void updateBlueMove(ActionEvent event) {
       if (bO.isSelected()) {
-         blueMove = "O";
+         Player.blueMove = "O";
       }
       else if (bS.isSelected()) {
-         blueMove = "S";
+         Player.blueMove = "S";
       }
    }
-
-   // UNFINISHED
-   public static void setBlueScore(String score) {
-      blueScore.setText(score);
-   }
+   
    /* ----- END Blue Player Logic ----- */
    /*__________________________________*/
 
@@ -144,7 +116,7 @@ public class PrimaryController implements Initializable {
    public static void makeMove (Square id) {
       if (boardSpaces.contains(id)) {
          if (playerTurn.getText() == "R") {
-            Text move = new Text(redMove);
+            Text move = new Text(Player.redMove);
             move.setFont(Font.font("Arial",36));
             move.autosize();
             move.setFill(Color.RED);
@@ -153,7 +125,7 @@ public class PrimaryController implements Initializable {
             setPlayerTurn("B");
          }
          else if (playerTurn.getText() == "B") {
-            Text move = new Text(blueMove);
+            Text move = new Text(Player.blueMove);
             move.setFont(Font.font("Arial",36));
             move.autosize();
             move.setFill(Color.BLUE);
