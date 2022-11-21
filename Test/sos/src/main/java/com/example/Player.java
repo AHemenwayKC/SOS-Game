@@ -19,11 +19,11 @@ public class Player {
       redScore = score;
    }
 
-   public String getBlueMove() {
+   public static String getBlueMove() {
       return blueMove;
    }
 
-   public void setBlueMove(String move) {
+   public static void setBlueMove(String move) {
       blueMove = move;
    }
 
