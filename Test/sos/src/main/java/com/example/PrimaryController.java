@@ -4,19 +4,25 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.beans.binding.Bindings;
 import javafx.event.ActionEvent;
 
 public class PrimaryController implements Initializable {
@@ -37,7 +43,7 @@ public class PrimaryController implements Initializable {
    private ComboBox<String> gameMode;
    
    private String[] gameModes = {"Simple", "General"};
-   public static String mode = "Simple";
+   public static String mode;
 
    @FXML
    private ComboBox<String> gameSize;
@@ -48,13 +54,26 @@ public class PrimaryController implements Initializable {
    private RadioButton rS, rO, bS, bO;
 
    @FXML
-   private Label turnLabel;
+   private RadioButton redComp;
+   @FXML
+   private RadioButton blueComp;
+
+   public static Computer cp1 = new Computer();
+   public static Computer cp2 = new Computer();
+
+   @FXML
+   private Text gameMsg;
    public static Label playerTurn = new Label("R");
 
    @FXML
    private Label scoreRed;
    @FXML
    private Label scoreBlue;
+
+   @FXML
+   public CheckBox saveGameBox;
+
+   public Boolean saveBool = false;
 
    /*____________________________________*/
    /* ----- START Red Player Logic ----- */
@@ -68,9 +87,8 @@ public class PrimaryController implements Initializable {
       }
    }
 
-   public void updateRedScore(ActionEvent event) {
-      scoreRed.setText("" + Player.redScore);
-   }
+   public static Integer rScore;
+   public Integer scoreR = rScore;
 
    /* ----- END Red Player Logic ----- */
    /*__________________________________*/
@@ -89,6 +107,8 @@ public class PrimaryController implements Initializable {
          Player.setBlueMove("S");
       }
    }
+
+   public static Integer bScore;
    
    /* ----- END Blue Player Logic ----- */
    /*__________________________________*/
@@ -99,8 +119,15 @@ public class PrimaryController implements Initializable {
    /*_______________________________*/
    /* ----- START Game Logic ----- */
 
+   public void saveGameCheck(ActionEvent event) {
+      if (saveGameBox.isSelected()) {
+         saveBool = true;
+      }
+   }
+
    public void setGameMode(ActionEvent event) {
       mode = gameMode.getValue();
+      System.out.println(mode);
    }
 
    public String getGameMode() {
@@ -110,6 +137,7 @@ public class PrimaryController implements Initializable {
 
    public void setGameSize(ActionEvent event) {
       GridPane board = new GridPane();
+      
 
       int size = Integer.parseInt(gameSize.getValue());
 
@@ -158,7 +186,7 @@ public class PrimaryController implements Initializable {
       boardSpaces.remove(id);
    }
 
-   public static String direction(Square n, String direction) {
+   public static String getDirection(Square n, String direction) {
       Integer x = Integer.valueOf(n.getId().split(",")[0]);
       Integer y = Integer.valueOf(n.getId().split(",")[1]);
       String out = "";
@@ -200,27 +228,25 @@ public class PrimaryController implements Initializable {
          Text temp = (Text)currSq.getChildren().get(0);
          String currText = temp.getText();
 
-         if(i.getId().equals(direction(currSq, "downRight"))) {
+         if(i.getId().equals(getDirection(currSq, "downRight"))) {
             if(!i.getChildren().isEmpty()) {
                Text k = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (k.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(i, "downRight"))) {
+                        if (j.getId().equals(getDirection(i, "downRight"))) {
                            if (!j.getChildren().isEmpty()){
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
-                                    //gameOver(playerTurn);
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagBack");
@@ -234,21 +260,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (k.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "upLeft"))) {
+                        if (j.getId().equals(getDirection(currSq, "upLeft"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")){
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                        //UPDATE GAME OVER/TURN HERE
-                                       break;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagBack");
@@ -261,27 +286,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "right"))) {
+         else if (i.getId().equals(getDirection(currSq, "right"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(i, "right"))) {
+                        if (j.getId().equals(getDirection(i, "right"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     //UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "horizontal");
@@ -295,21 +319,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "left"))) {
+                        if (j.getId().equals(getDirection(currSq, "left"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "horizontal");
@@ -322,27 +345,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "upRight"))) {
+         else if (i.getId().equals(getDirection(currSq, "upRight"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "upRight"))) {
+                        if (j.getId().equals(getDirection(i, "upRight"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagForward");
@@ -356,21 +378,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "downLeft"))) {
+                        if (j.getId().equals(getDirection(currSq, "downLeft"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagForward");
@@ -383,27 +404,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "up"))) {
+         else if (i.getId().equals(getDirection(currSq, "up"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "up"))) {
+                        if (j.getId().equals(getDirection(i, "up"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "vertical");
@@ -417,21 +437,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "down"))) {
+                        if (j.getId().equals(getDirection(currSq, "down"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "vertical");
@@ -444,27 +463,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "upLeft"))) {
+         else if (i.getId().equals(getDirection(currSq, "upLeft"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "upLeft"))) {
+                        if (j.getId().equals(getDirection(i, "upLeft"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagBack");
@@ -478,21 +496,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "downRight"))) {
+                        if (j.getId().equals(getDirection(currSq, "downRight"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagBack");
@@ -505,27 +522,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "left"))) {
+         else if (i.getId().equals(getDirection(currSq, "left"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "left"))) {
+                        if (j.getId().equals(getDirection(i, "left"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "horizontal");
@@ -539,21 +555,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "right"))) {
+                        if (j.getId().equals(getDirection(currSq, "right"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "horizontal");
@@ -566,27 +581,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "downLeft"))) {
+         else if (i.getId().equals(getDirection(currSq, "downLeft"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "downLeft"))) {
+                        if (j.getId().equals(getDirection(i, "downLeft"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagForward");
@@ -600,21 +614,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "upRight"))) {
+                        if (j.getId().equals(getDirection(currSq, "upRight"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")){
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "diagForward");
@@ -627,27 +640,26 @@ public class PrimaryController implements Initializable {
                }
             }
          }
-         else if (i.getId().equals(direction(currSq, "down"))) {
+         else if (i.getId().equals(getDirection(currSq, "down"))) {
             if (!i.getChildren().isEmpty()) {
                Text text = (Text)i.getChildren().get(0);
                if (currText.equals("S")) {
                   if (text.getText().equals("O")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "down"))) {
+                        if (j.getId().equals(getDirection(i, "down"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "vertical");
@@ -661,21 +673,20 @@ public class PrimaryController implements Initializable {
                else if (currText.equals("O")) {
                   if (text.getText().equals("S")) {
                      for (Square j: squares) {
-                        if (j.getId().equals(direction(currSq, "up"))) {
+                        if (j.getId().equals(getDirection(currSq, "up"))) {
                            if (!j.getChildren().isEmpty()) {
                               Text n = (Text)j.getChildren().get(0);
                               if (n.getText().equals("S")) {
-                                 if (mode == "Simple") {
+                                 if (mode.equals("Simple")) {
                                     boardSpaces.clear();
                                     // UPDATE GAME OVER HERE
-                                    break;
                                  }
-                                 else if (mode == "General") {
+                                 else if (mode.equals("General")) {
                                     if (playerTurn.equals("B")) {
-                                       Player.blueScore = Player.blueScore + 1;
+                                       bScore = bScore + 1;
                                     }
                                     else if (playerTurn.equals("R")) {
-                                       Player.redScore = Player.redScore + 1;
+                                       rScore = rScore + 1;
                                     }
                                  }
                                  Square.drawLine(currSq, i, j, "vertical");
@@ -689,24 +700,42 @@ public class PrimaryController implements Initializable {
             }
          }
       }
-      // if (mode == "General") {
-      //    if (boardSpaces.isEmpty()) {
-      //       gameOver();
-      //    }
-      // }
    }
 
-   public static void gameOver(String status) {
-      if (Player.redScore > Player.blueScore) {
-         System.out.println("Red Player has won!");
+   public void gameOver(String status) {
+      if (rScore > bScore) {
+         gameMsg.setText("Red Player has won!");
       }
-      else if (Player.blueScore > Player.redScore) {
-         System.out.println("Blue Player has won!");
+      else if (bScore > rScore) {
+         gameMsg.setText("Blue Player has won!");
       }
       else {
-         System.out.println("Game Over! The result is a tie!");
+         gameMsg.setText("Tie game");
       }
    }
+
+   public Integer saveGame = 1;
+   public void createGameFile() {
+      File sosSaveGame = new File("sosGame" + saveGame + ".txt");
+      saveGame += 1;
+   }
+
+   public void writeGameFile(ArrayList<String> moves) throws IOException {
+      FileWriter writer = new FileWriter("sosGame" + saveGame + ".txt");
+      for (int i = 0; i < moves.size(); i++) {
+         writer.write("move " + i + ": " + moves.get(i));
+         writer.write("\n");
+      }
+   }
+
+   public void saveGameFile(ArrayList<String> moves) throws IOException {
+      if (saveBool == true) {
+         createGameFile();
+         writeGameFile(moves);
+      }
+
+   }
+
    /* ----- END Game Logic ----- */
    /*____________________________*/
 
@@ -716,5 +745,12 @@ public class PrimaryController implements Initializable {
    public void initialize(URL arg0, ResourceBundle arg1) {
       gameMode.getItems().addAll(gameModes);
       gameSize.getItems().addAll(gameSizes);
+      scoreRed.setText(String.valueOf(scoreR));
+      scoreBlue.setText(String.valueOf(bScore));
+      gameMsg.textProperty().bind(Bindings.createStringBinding(() -> {
+         String msg = getPlayerTurn().getText() + " Turn";
+
+         return msg;
+      }));
    }
 }
